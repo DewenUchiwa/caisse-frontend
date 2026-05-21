@@ -25,12 +25,6 @@
     .sync-dot.err { background: var(--accent); }
     .sync-dot.loading { background: var(--gold); animation: pulse 1s infinite; }
     @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-    .config-banner { background: #fff8d6; border-bottom: 1.5px solid var(--gold); padding: 0.75rem 2rem; font-size: 0.82rem; color: var(--text); display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
-    .config-banner input { padding: 0.35rem 0.7rem; border: 1.5px solid var(--border); border-radius: 8px; font-family: 'DM Mono', monospace; font-size: 0.78rem; background: white; outline: none; min-width: 220px; }
-    .config-banner input:focus { border-color: var(--text); }
-    .config-banner button { padding: 0.35rem 0.9rem; background: var(--text); color: var(--bg); border: none; border-radius: 8px; font-family: 'DM Mono', monospace; font-size: 0.78rem; cursor: pointer; }
-    .config-banner button:hover { background: var(--accent2); }
-    .config-banner .cb-label { color: var(--muted); }
     .view { display: none; padding: 2rem; max-width: 1400px; margin: 0 auto; }
     .view.active { display: block; }
     .caisse-grid { display: grid; grid-template-columns: 1fr 340px; gap: 1.5rem; align-items: start; }
@@ -149,13 +143,6 @@
   </div>
 </nav>
 
-<div class="config-banner" id="configBanner">
-  <span class="cb-label">⚙️ Configuration API :</span>
-  <input type="text" id="cfgUrl" placeholder="https://api.monsite.com" />
-  <input type="password" id="cfgKey" placeholder="Clé API (mot de passe)" />
-  <button onclick="saveConfig()">Connecter</button>
-</div>
-
 <div class="view active" id="view-caisse">
   <div class="total-banner">
     <h1>Commande</h1>
@@ -236,26 +223,10 @@
 <div class="toast" id="toast"></div>
 
 <script>
-  let apiUrl = localStorage.getItem('api_url') || '';
-  let apiKey = localStorage.getItem('api_key') || '';
-
-  function saveConfig() {
-    apiUrl = document.getElementById('cfgUrl').value.trim().replace(/\/$/, '');
-    apiKey = document.getElementById('cfgKey').value.trim();
-    localStorage.setItem('api_url', apiUrl);
-    localStorage.setItem('api_key', apiKey);
-    hideBannerIfConfigured();
-    fetchData();
-  }
-
-  function hideBannerIfConfigured() {
-    if (apiUrl && apiKey) {
-      document.getElementById('configBanner').style.display = 'none';
-    } else {
-      document.getElementById('cfgUrl').value = apiUrl;
-      document.getElementById('cfgKey').value = apiKey;
-    }
-  }
+  // ── CONFIG HARDCODÉE — modifier ici si besoin ──────────
+  const API_URL = 'https://caisseapiacft.dewen.fr';
+  const API_KEY = 'muhammed57';
+  // ───────────────────────────────────────────────────────
 
   let produits = {};
   let adminCat = '';
@@ -279,10 +250,9 @@
   }
 
   async function fetchData() {
-    if (!apiUrl || !apiKey) { setSyncStatus('err', 'Non configuré'); return; }
     setSyncStatus('loading', 'Chargement\u2026');
     try {
-      const res = await fetch(apiUrl + '/api/produits', { headers: { 'x-api-key': apiKey } });
+      const res = await fetch(API_URL + '/api/produits', { headers: { 'x-api-key': API_KEY } });
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const json = await res.json();
       produits = json.produits || {};
@@ -298,12 +268,11 @@
   }
 
   async function pushData() {
-    if (!apiUrl || !apiKey) return;
     setSyncStatus('loading', 'Sauvegarde\u2026');
     try {
-      const res = await fetch(apiUrl + '/api/produits', {
+      const res = await fetch(API_URL + '/api/produits', {
         method: 'PUT',
-        headers: { 'x-api-key': apiKey, 'Content-Type': 'application/json' },
+        headers: { 'x-api-key': API_KEY, 'Content-Type': 'application/json' },
         body: JSON.stringify({ produits })
       });
       if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -547,7 +516,6 @@
   function executeConfirm() { if (confirmCb) confirmCb(); closeConfirm(); }
   document.getElementById('confirmModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeConfirm(); });
 
-  hideBannerIfConfigured();
   fetchData();
   renderStats();
   setInterval(fetchData, 30000);
